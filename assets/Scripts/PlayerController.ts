@@ -1,6 +1,7 @@
 import { _decorator, Component, EventMouse, Input, input, Node, Vec3, Animation } from 'cc';
+import { BLOCK_SIZE } from './constant';
 const { ccclass, property } = _decorator;
-const BLOCK_SIZE = 40
+
 @ccclass('PlayerController')
 export class PlayerController extends Component {
     private startJump: boolean = false;
@@ -13,7 +14,7 @@ export class PlayerController extends Component {
     private targetPos: Vec3 = new Vec3();
 
     @property(Animation)
-    BodyAnim: Animation = null
+    BodyAnim: Animation|null = null
 
 
     start() {
