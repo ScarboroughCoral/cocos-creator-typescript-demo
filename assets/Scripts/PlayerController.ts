@@ -1,4 +1,4 @@
-import { _decorator, Component, EventMouse, Input, input, Node, Vec3, Animation } from 'cc';
+import { _decorator, Component, EventMouse, Input, input, Node, Vec3, Animation, EventTouch } from 'cc';
 import { BLOCK_SIZE } from './constant';
 import { Events } from './events';
 const { ccclass, property } = _decorator;
@@ -17,7 +17,10 @@ export class PlayerController extends Component {
     @property(Animation)
     BodyAnim: Animation|null = null
     private curMoveSteps = 0
-
+    @property(Node)
+    leftTouch: Node | null = null
+    @property(Node)
+    rightTouch: Node | null = null
     start() {
     }
     reset() {
@@ -25,9 +28,21 @@ export class PlayerController extends Component {
     }
     setInputActive(active: boolean) {
         if (active) {
+            this.leftTouch?.on(Input.EventType.TOUCH_START, this.onTouchStart, this);
+            this.rightTouch?.on(Input.EventType.TOUCH_START, this.onTouchStart, this);
             input.on(Input.EventType.MOUSE_UP, this.onMouseUp, this)
         } else {
             input.off(Input.EventType.MOUSE_UP, this.onMouseUp, this)
+            this.leftTouch?.off(Input.EventType.TOUCH_START, this.onTouchStart, this);
+            this.rightTouch?.off(Input.EventType.TOUCH_START, this.onTouchStart, this);
+        }
+    }
+    private onTouchStart(event: EventTouch) {
+        const target = event.target as Node;    
+        if (target?.name == 'LeftTouch') {
+            this.jumpByStep(1);
+        } else {
+            this.jumpByStep(2);
         }
     }
     private onMouseUp(e: EventMouse) {
