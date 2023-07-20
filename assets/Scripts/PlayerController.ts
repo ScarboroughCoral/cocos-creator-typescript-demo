@@ -1,5 +1,6 @@
 import { _decorator, Component, EventMouse, Input, input, Node, Vec3, Animation } from 'cc';
 import { BLOCK_SIZE } from './constant';
+import { Events } from './events';
 const { ccclass, property } = _decorator;
 
 @ccclass('PlayerController')
@@ -15,26 +16,35 @@ export class PlayerController extends Component {
 
     @property(Animation)
     BodyAnim: Animation|null = null
-
+    private curMoveSteps = 0
 
     start() {
-        input.on(Input.EventType.MOUSE_UP, (e) => {
-            const currentButton = e.getButton()
-            console.debug(currentButton, EventMouse.BUTTON_LEFT, EventMouse.BUTTON_RIGHT)
-            if (currentButton === EventMouse.BUTTON_LEFT) {
-                this.jumpByStep(1)
-            } else if (currentButton === EventMouse.BUTTON_RIGHT) {
-                this.jumpByStep(2)
-            }
-        })
     }
-
+    reset() {
+        this.curMoveSteps = 0
+    }
+    setInputActive(active: boolean) {
+        if (active) {
+            input.on(Input.EventType.MOUSE_UP, this.onMouseUp, this)
+        } else {
+            input.off(Input.EventType.MOUSE_UP, this.onMouseUp, this)
+        }
+    }
+    private onMouseUp(e: EventMouse) {
+        const currentButton = e.getButton()
+        if (currentButton === EventMouse.BUTTON_LEFT) {
+            this.jumpByStep(1)
+        } else if (currentButton === EventMouse.BUTTON_RIGHT) {
+            this.jumpByStep(2)
+        }
+    }
     update(deltaTime: number) {
         if (this.startJump) {
             this.curJumpTime += deltaTime
             if (this.curJumpTime > this.jumpTime) {
                 this.node.setPosition(this.targetPos)
                 this.startJump = false
+                this.onOnceJumpEnd()
             } else {
                 this.node.getPosition(this.curPos)
                 this.deltaPos.x = this.curJumpSpeed * deltaTime
@@ -57,6 +67,10 @@ export class PlayerController extends Component {
         this.curJumpSpeed = this.jumpStep * BLOCK_SIZE / this.jumpTime
         this.node.getPosition(this.curPos)
         Vec3.add(this.targetPos,this.curPos,new Vec3(this.jumpStep * BLOCK_SIZE,0,0))
+        this.curMoveSteps += step
+    }
+    onOnceJumpEnd() {
+        this.node.emit(Events.JumpEnd, this.curMoveSteps)
     }
 }
 
